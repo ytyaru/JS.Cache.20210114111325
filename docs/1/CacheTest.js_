@@ -1,0 +1,62 @@
+class CacheTest {
+    #CURRENT_CACHES = {
+        font: '0.0.1',
+        code: '0.0.1',
+    }
+    constructor() {
+        console.log(window.Cache);
+    }
+    put() {
+        caches.open(this.#CURRENT_CACHES.font).then(function(cache) {
+          return cache.match(event.request).then(function(response) {
+            if (response) {
+              // event.request のエントリがキャッシュにある場合、レスポンスが定義され、それを返すことができます。
+              // この例では、フォントリソースのみがキャッシュされることに注意してください。
+              console.log(' Found response in cache:', response);
+              return response;
+            }
+            // それ以外の場合、event.request のエントリがキャッシュにない場合、
+            // レスポンスは undefined となり、リソースを fetch() する必要があります。
+            console.log(' No response for %s found in cache. About to fetch ' +
+              'from network...', event.request.url);
+
+            // 後で cache.put() の呼び出しで使用する可能性があるため、リクエストで .clone() を呼び出します。
+            // fetch() とcache.put() の両方がリクエストを「消費」するため、コピーを作成する必要があります。
+            // （https://fetch.spec.whatwg.org/#dom-request-clone を参照）
+            return fetch(event.request.clone()).then(function(response) {
+              console.log('  Response for %s from network is: %O',
+                event.request.url, response);
+
+              if (response.status < 400 &&
+                  response.headers.has('content-type') &&
+                  response.headers.get('content-type').match(/^font\//i)) {
+                // これにより、エラーであることがわかっているレスポンス（つまり、HTTP ステータスコード 4xx または 5xx）のキャッシュが回避されます。
+                // また、フォントに対応するレスポンスのみをキャッシュする必要があります。
+                // つまり、"font/" で始まる Content-Type レスポンスヘッダーを持ちます。
+                // 不透明なフィルタされたレスポンス（https://fetch.spec.whatwg.org/#concept-filtered-response-opaque）の場合、
+                // レスポンスヘッダーにアクセスできないので、このチェックは常に失敗し、フォントはキャッシュされないことに注意してください。
+                // すべての Google Web Fonts は CORS をサポートするドメインから提供されるため、ここでは問題になりません。
+                // ただし、CORS をサポートしていないクロスオリジンドメインから他のリソースをキャッシュしようとしている場合は、注意が必要です。
+                // レスポンスで .clone() を呼び出して、そのコピーをキャッシュに保存します。
+                // そうすることで、制御されたページに戻る元のレスポンスオブジェクトを保持できます。
+                // （https://fetch.spec.whatwg.org/#dom-response-clone を参照）
+                console.log('  Caching the response to', event.request.url);
+                cache.put(event.request, response.clone());
+              } else {
+                console.log('  Not caching the response to', event.request.url);
+              }
+
+              // 元のレスポンスオブジェクトを返します。これは、リソース要求を満たすために使用されます。
+              return response;
+            });
+          }).catch(function(error) {
+            // この catch() は、match() または fetch() 操作から発生する例外を処理します。
+            // HTTP エラーレスポンス（404 など）は例外をトリガーしないことに注意してください。
+            // 適切なエラーコードが設定された通常のレスポンスオブジェクトを返します。
+            console.error('  Error in fetch handler:', error);
+
+            throw error;
+          });
+        })
+    }
+}
