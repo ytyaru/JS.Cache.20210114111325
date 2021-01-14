@@ -1,5 +1,4 @@
-import Sub from './sub.js';
+import CacheTest from './CacheTest.js';
 window.addEventListener('load', (event) => {
-    let sub = new Sub();
-    sub.show();
+    let test = new CacheTest();
 });

@@ -1,0 +1,49 @@
+export default class FullCache {
+    #VERSION = '0.0.1';
+    #CACHE_FILES = [
+        'index.html', 
+        'main.js', 
+        'FullCache.js', 
+    ];
+    constructor() {
+        console.log(window.Cache);
+        this.#setup();
+    }
+    #setup() {
+        const self = this;
+        window.addEventListener('install', function(e) {
+            console.log(`install event !!`, e);
+            self.addAll(e);
+        });
+        window.addEventListener('fetch', function(e) {
+            console.log('fetch event !!', e);
+            self.cache(e)
+        });
+        window.addEventListener('activate', function(e) {
+            console.log(`activate event !!`, e);
+        });
+    }
+    addAll(event) {
+        const self = this;
+        caches.open(this.#VERSION).then(function(cache) {
+            console.log('---- open()', self.#CACHE_FILES);
+            return cache.addAll(self.#CACHE_FILES);
+        });
+    }
+    cache(event) {
+        const self = this;
+        // リクエストに一致するデータがキャッシュにあるかどうか
+        caches.match(event.request).then(function(cacheResponse) {
+            // キャッシュがあればそれを返す、なければリクエストを投げる
+            return cacheResponse || fetch(event.request).then(function(response) {
+                return caches.open(self.#VERSION).then(function(cache) {
+                    // レスポンスをクローンしてキャッシュに入れる
+                    cache.put(event.request, response.clone());
+                    // オリジナルのレスポンスはそのまま返す
+                    return response;
+                });  
+            });
+        });
+    }
+}
+

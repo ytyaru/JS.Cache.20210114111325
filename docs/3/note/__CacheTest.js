@@ -1,4 +1,4 @@
-class CacheTest {
+export default class CacheTest {
     #VERSION = '0.0.1';
     #CACHE_FILES = [
         'index.html', 
