@@ -12,7 +12,7 @@ export default class ServiceWorkerRegister {
         console.log('has navigator:',navigator);
         console.log(`has serviceWorker: ${'serviceWorker' in navigator}`);
         navigator.serviceWorker.register(this.#path, {
-            scope: '/'
+            scope: './'
         }).then(function(registration) {
             const data = {
                 type: 'CACHE_URLS',
