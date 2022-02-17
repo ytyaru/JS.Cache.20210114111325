@@ -21,7 +21,8 @@ export default class ServiceWorkerRegister {
                     ...performance.getEntriesByType('resource').map((r) => r.name)
                 ]
             };
-            registration.installing.postMessage(data);
+            //registration.installing.postMessage(data);
+            registration?.installing?.postMessage?(data);
         }).catch (function (error) {
             console.log(error);
         });
