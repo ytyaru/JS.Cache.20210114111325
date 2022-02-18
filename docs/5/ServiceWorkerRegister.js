@@ -22,7 +22,7 @@ export default class ServiceWorkerRegister {
                 ]
             };
             //registration.installing.postMessage(data);
-            registration?.installing?.postMessage?(data);
+            registration?.installing?.postMessage?.(data);
         }).catch (function (error) {
             console.log(error);
         });
